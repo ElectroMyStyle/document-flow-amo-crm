@@ -1,11 +1,18 @@
 {
-    "name": "laravel/laravel",
+    "name": "electromystyle/document-flow-amo-crm",
     "type": "project",
-    "description": "The Laravel Framework.",
+    "description": "Laravel web server for processing created documents in AMO CRM.",
+    "authors": [
+        {
+            "name": "David",
+            "email": "electromystyle@mail.ru"
+        }
+    ],
     "keywords": ["framework", "laravel"],
     "license": "MIT",
     "require": {
         "php": "^7.3|^8.0",
+        "amocrm/amocrm-api-library": "^1.10",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.0.1",
         "laravel/framework": "^8.75",
