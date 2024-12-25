@@ -185,21 +185,26 @@ class ProcessingLeadNoteJob implements ShouldQueue
                 'debug' => $this->debug
             ]);
 
-            $resp = $httpClient->request('POST', $this->google_apps_script_webhook_uri, [
-                # Назначение платежа
-                'purpose_of_payment' => $purposePayment,
-                # Номер платежа (документа)
-                'payment_number' => $this->note['doc_num'],
-                # Дата платежа
-                'payment_date' => $leadDocDateAct,
-                # Сумма сделки (платежа)
-                'payment_amount' => $leadDocPrice,
-                # Название компании
-                'company_name' => $leadCompanyName,
-            ]);
+            $requestOptions = [
+                'form_params' => [
+                    # Назначение платежа
+                    'purpose_of_payment' => $purposePayment,
+                    # Номер платежа (документа)
+                    'payment_number' => $this->note['doc_num'],
+                    # Дата платежа
+                    'payment_date' => $leadDocDateAct,
+                    # Сумма сделки (платежа)
+                    'payment_amount' => $leadDocPrice,
+                    # Название компании
+                    'company_name' => $leadCompanyName,
+                ]
+            ];
+
+            $resp = $httpClient->request('POST', $this->google_apps_script_webhook_uri, $requestOptions);
 
             // Если вернулся код 200, значит данные успешно отправлены в Google Apps Script
             if ($resp->getStatusCode() == 200) {
+                Log::debug("[ProcessingLeadNoteJob]: Данные успешно отправлены в Google Apps Script по LeadId: '$leadId' & NoteId: '$noteId'");
                 // TODO: Сделать обновление об успешной передачи данных и работе воркера ?
             }
 
