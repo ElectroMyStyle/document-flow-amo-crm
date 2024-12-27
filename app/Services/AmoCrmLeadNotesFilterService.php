@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Enums\DocumentType;
+
 /**
  * Сервис фильтрации заметок лидов.
  */
@@ -80,7 +82,7 @@ class AmoCrmLeadNotesFilterService
                 $jsonNoteText['text'] = mb_strtolower($jsonNoteText['text']);
 
                 if ($jsonNoteText['service'] !== 'документы' ||
-                    (!str_contains($jsonNoteText['text'], 'упд')) ||
+                    (!str_contains($jsonNoteText['text'], 'упд') && !str_contains($jsonNoteText['text'], 'счет-фактура')) ||
                     (!str_contains($jsonNoteText['text'], '№')) ||
                     (!str_contains($jsonNoteText['text'], 'создан'))) {
                     continue;
@@ -91,6 +93,12 @@ class AmoCrmLeadNotesFilterService
                     continue;
 
                 $note['note']['doc_num'] = $docNum;
+                $note['note']['doc_type_id'] = null;
+                if (str_contains($jsonNoteText['text'], 'упд')) {
+                    $note['note']['doc_type_id'] = DocumentType::UPD;
+                } elseif (str_contains($jsonNoteText['text'], 'счет-фактура')) {
+                    $note['note']['doc_type_id'] = DocumentType::INVOICE;
+                }
 
                 # Сохраняем нашу заметку о документе
                 $notes[] = $note['note'];
