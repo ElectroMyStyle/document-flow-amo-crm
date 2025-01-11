@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers\Webhooks;
 
+use App\Exceptions\InvalidCacheParamException;
 use App\Http\Controllers\Controller;
-use App\Jobs\ProcessingLeadNoteJob;
+use App\Jobs\GettingDataFromAmoCrmJob;
+use App\Jobs\SavingDocumentDataToDBJob;
+use App\Jobs\TransferringDocumentDataToGoogleSheetJob;
 use App\Services\AmoCrmLeadNotesFilterService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Контроллер с обработчиками вебхуков.
@@ -55,14 +60,24 @@ class AmoCrmWebhookController extends Controller
             # Постановка задач в очередь по каждой заметке отдельно
             foreach ($filteredNotes as $filteredNote) {
                 try {
-                    $filteredNote['account_subdomain'] = $account['subdomain'] . '.amocrm.ru';
+                    $amoCrmAccountSubdomain = $account['subdomain'] . '.amocrm.ru';
+                    $filteredNote['account_subdomain'] = $amoCrmAccountSubdomain;
 
                     # Log::info("Запускаем задачу с LeadId: {$filteredNote['element_id']} NoteId: {$filteredNote['id']}");
 
-                    ProcessingLeadNoteJob::dispatch($debug, $amoCrmLongLivedAccessToken, $filteredNote, $googleAppsScriptWebhookUri)
-                        ->onQueue('processing-lead-note');
+                    Bus::chain([
+                        new GettingDataFromAmoCrmJob($amoCrmAccountSubdomain, $amoCrmLongLivedAccessToken, $filteredNote['element_id'], $filteredNote),
+                        new TransferringDocumentDataToGoogleSheetJob($debug, $filteredNote['element_id'], $filteredNote['id'], $googleAppsScriptWebhookUri),
+                        new SavingDocumentDataToDBJob($filteredNote['element_id'], $filteredNote['id'])
+                    ])->catch(function (Throwable $e) {
+                        if ($e instanceof InvalidCacheParamException) {
+                            Log::error("Не удалось обработать цепочку задач, ошибка: " . $e->getMessage(), [ $e->getPayloadLeadNote() ]);
+                        } else {
+                            Log::error("Не удалось обработать цепочку задач, ошибка: " . $e->getMessage());
+                        }
+                    })->onQueue('processing-lead-note')->dispatch();
                 } catch (Exception $ex) {
-                    Log::error('Не удалось запусти задачу ProcessingLeadNoteJob, ошибка: ' . $ex->getMessage(), [ 'note' => $filteredNote ]);
+                    Log::error('Не удалось запустить цепочку задач, ошибка: ' . $ex->getMessage(), [ 'note' => $filteredNote ]);
                 }
             } // foreach ($filteredNotes)
 
