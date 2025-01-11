@@ -20,6 +20,8 @@ npm install && npm run dev
 composer install
 ```
 
+- Создайте и настройте файл `.env`
+
 - Запустите веб-сервер
 ```bash
 php artisan serve
