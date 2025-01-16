@@ -18,7 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int $amo_crm_account_id
  * @property string $purpose_of_payment
  * @property int $document_number
- * @property Carbon $document_date
+ * @property Carbon|null $document_date
  * @property int $payment_amount
  * @property Carbon $created_at
  * @property Carbon $updated_at
