@@ -91,36 +91,26 @@ class TransferringDocumentDataToGoogleSheetJob implements ShouldQueue
         if (empty($payloadLeadNote))
             throw new InvalidCacheParamException("Не удалось получить данные заметки по LeadId: '$this->lead_id' & NoteId: '$this->note_id' из кэша");
 
-        $documentDateAct = $payloadLeadNote['document_date_act'] ?? null;
-        $documentDatePeriodAct = $payloadLeadNote['document_date_period_act'] ?? null;
-        $documentNumber = $payloadLeadNote['document_number'] ?? null;
-        $documentPaymentAmount = $payloadLeadNote['document_payment_amount'] ?? null;
-        $documentStaffAct = $payloadLeadNote['document_staff_act'] ?? null;
+        $documentDateAct = $payloadLeadNote['document_date_act'] ?? '';
+        $documentDatePeriodAct = $payloadLeadNote['document_date_period_act'] ?? '';
+        $documentNumber = $payloadLeadNote['document_number'] ?? '';
+        $documentPaymentAmount = $payloadLeadNote['document_payment_amount'] ?? '';
+        $documentStaffAct = $payloadLeadNote['document_staff_act'] ?? '';
         $documentTypeId = $payloadLeadNote['document_type_id'] ?? null;
-        $leadCompanyName = $payloadLeadNote['lead_company_name'] ?? null;
-
-        if (is_null($documentNumber))
-            throw new InvalidCacheParamException("Не задан 'Номер созданного документа' в объекте кэша", 0, null, $payloadLeadNote);
-
-        if (is_null($documentDateAct))
-            throw new InvalidCacheParamException("Не задана 'Дата акта' в объекте кэша", 0, null, $payloadLeadNote);
-
-        if (is_null($documentDatePeriodAct))
-            throw new InvalidCacheParamException("Не задан период 'Акт/Период' в объекте кэша", 0, null, $payloadLeadNote);
-
-        if (is_null($documentPaymentAmount))
-            throw new InvalidCacheParamException("Не удалось получить 'Бюджет сделки' в объекте кэша", 0, null, $payloadLeadNote);
-
-        if (is_null($documentStaffAct))
-            throw new InvalidCacheParamException("Не удалось получить 'Штат/Акт' в объекте кэша", 0, null, $payloadLeadNote);
+        $leadCompanyName = $payloadLeadNote['lead_company_name'] ?? '';
 
         if (is_null($documentTypeId))
             throw new InvalidCacheParamException("Не удалось получить идентификатор типа документа в объекте кэша", 0, null, $payloadLeadNote);
 
-        if (is_null($leadCompanyName))
-            throw new InvalidCacheParamException("Не удалось получить название компании лида в объекте кэша", 0, null, $payloadLeadNote);
-
-        $purposeOfPayment = sprintf("Аутсорсинг охраны труда (%s) Штат до %s чел.", $documentDatePeriodAct, $documentStaffAct);
+        if (!empty($documentDatePeriodAct) && !empty($documentStaffAct)) {
+            $purposeOfPayment = sprintf("Аутсорсинг охраны труда (%s) Штат до %s чел.", $documentDatePeriodAct, $documentStaffAct);
+        } else if (!empty($documentDatePeriodAct)) {
+            $purposeOfPayment = sprintf("Аутсорсинг охраны труда (%s)", $documentDatePeriodAct);
+        } else if (!empty($documentStaffAct)) {
+            $purposeOfPayment = sprintf("Аутсорсинг охраны труда Штат до %s чел.", $documentStaffAct);
+        } else {
+            $purposeOfPayment = "Аутсорсинг охраны труда";
+        }
         $payloadLeadNote['purpose_of_payment'] = $purposeOfPayment;
         try {
             $httpClient = new Client([
