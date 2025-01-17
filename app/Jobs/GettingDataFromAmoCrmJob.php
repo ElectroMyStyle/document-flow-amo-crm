@@ -113,7 +113,7 @@ class GettingDataFromAmoCrmJob implements ShouldQueue
             'document_number' => $this->note['doc_num'] ?? null,
             'document_date_act' => null,
             'document_date_period_act' => null,
-            'document_payment_amount' => null,
+            'document_payment_amount' => 0,
             'document_staff_act' => null,
             'purpose_payment' => '',
             'note' => $this->note,
@@ -141,6 +141,10 @@ class GettingDataFromAmoCrmJob implements ShouldQueue
 
         # Бюджет сделки
         $payloadLeadNote['document_payment_amount'] = $leadInfo->getPrice();
+
+        # Если по каким-то причинам не удалось получить бюджет
+        if (is_null($payloadLeadNote['document_payment_amount']))
+            $payloadLeadNote['document_payment_amount'] = 0;
 
         $fieldValues = $leadInfo->getCustomFieldsValues();
         if ($fieldValues instanceof CustomFieldsValuesCollection) {
