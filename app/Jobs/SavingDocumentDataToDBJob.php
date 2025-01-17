@@ -79,8 +79,8 @@ class SavingDocumentDataToDBJob implements ShouldQueue
         $documentTypeId = $payloadLeadNote['document_type_id'] ?? null;
         $documentNumber = $payloadLeadNote['document_number'] ?? null;
         $documentDateAct = $payloadLeadNote['document_date_act'] ?? null;
-        $documentPaymentAmount = $payloadLeadNote['document_payment_amount'] ?? null;
-        $purposeOfPayment = $payloadLeadNote['purpose_of_payment'] ?? null;
+        $documentPaymentAmount = $payloadLeadNote['document_payment_amount'] ?? 0;
+        $purposeOfPayment = $payloadLeadNote['purpose_of_payment'] ?? '';
 
         $leadCompanyId = $payloadLeadNote['lead_company_id'] ?? null;
         $leadCompanyName = $payloadLeadNote['lead_company_name'] ?? '';
@@ -97,20 +97,8 @@ class SavingDocumentDataToDBJob implements ShouldQueue
         if (is_null($documentNumber))
             throw new InvalidCacheParamException("Не задан номер созданного документа в объекте кэша", 0, null, $payloadLeadNote);
 
-        if (is_null($documentDateAct))
-            throw new InvalidCacheParamException("Не задана 'Дата акта' в объекте кэша", 0, null, $payloadLeadNote);
-
-        if (is_null($documentPaymentAmount))
-            throw new InvalidCacheParamException("Не удалось получить 'Бюджет сделки' в объекте кэша", 0, null, $payloadLeadNote);
-
-        if (is_null($purposeOfPayment))
-            throw new InvalidCacheParamException("Не задано 'Название платежа' в объекте кэша", 0, null, $payloadLeadNote);
-
         if (is_null($leadCompanyId))
             throw new InvalidCacheParamException("Не задан идентификатор компании лида в объекте кэша", 0, null, $payloadLeadNote);
-
-        if (is_null($leadCompanyName))
-            throw new InvalidCacheParamException("Не удалось получить название компании лида в объекте кэша", 0, null, $payloadLeadNote);
 
 
         //region - Создаём запись компании в базе данных
